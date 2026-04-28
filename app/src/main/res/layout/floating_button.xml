@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <!-- Outer glow ring -->
+    <View
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/fab_ring"
+        android:layout_gravity="center"/>
+
+    <!-- Main button -->
+    <FrameLayout
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@drawable/fab_bg"
+        android:layout_gravity="center"
+        android:elevation="8dp">
+
+        <!-- Play icon text -->
+        <TextView
+            android:id="@+id/fab_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="▶"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:paddingStart="3dp"/>
+
+        <!-- Red dot indicator shown when dimmed -->
+        <View
+            android:id="@+id/dim_indicator"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="6dp"
+            android:background="@drawable/red_dot"
+            android:visibility="gone"/>
+
+    </FrameLayout>
+
+</FrameLayout>
