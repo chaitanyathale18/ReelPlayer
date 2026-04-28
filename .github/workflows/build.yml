@@ -1,0 +1,85 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Download Gradle Wrapper JAR
+        run: |
+          mkdir -p gradle/wrapper
+          curl -fsSL \
+            "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+          echo "Wrapper JAR size: $(wc -c < gradle/wrapper/gradle-wrapper.jar) bytes"
+
+      - name: Create launcher icons
+        run: |
+          pip install pillow --quiet
+          python3 << 'PYEOF'
+          from PIL import Image, ImageDraw, ImageFont
+          import os
+
+          sizes = {
+            "mipmap-mdpi": 48,
+            "mipmap-hdpi": 72,
+            "mipmap-xhdpi": 96,
+            "mipmap-xxhdpi": 144,
+            "mipmap-xxxhdpi": 192,
+          }
+
+          for folder, size in sizes.items():
+            path = f"app/src/main/res/{folder}"
+            os.makedirs(path, exist_ok=True)
+
+            img = Image.new("RGB", (size, size), color=(10, 10, 15))
+            draw = ImageDraw.Draw(img)
+
+            margin = size // 8
+            draw.ellipse([margin, margin, size - margin, size - margin], fill=(255, 23, 68))
+
+            # Draw simple play triangle
+            cx, cy = size // 2, size // 2
+            ts = size // 4
+            offset = ts // 5
+            draw.polygon([
+              (cx - ts//2 + offset, cy - ts + offset),
+              (cx - ts//2 + offset, cy + ts - offset),
+              (cx + ts - offset, cy)
+            ], fill="white")
+
+            img.save(f"{path}/ic_launcher.png")
+            img.save(f"{path}/ic_launcher_round.png")
+            print(f"Created {folder} ({size}x{size})")
+          PYEOF
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReelPlayer-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
